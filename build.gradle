@@ -1,0 +1,157 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven {
+            credentials {
+                username System.getenv('HAULMONT_REPOSITORY_USER')
+                password System.getenv('HAULMONT_REPOSITORY_PASSWORD')
+            }
+            url "http://repository.haulmont.com:8587/nexus/content/groups/shamrock-work/"
+        }
+        dependencies {
+            classpath group: 'com.haulmont.shamrock.gradle', name: 'shamrock-plugin', version: '3.5-SNAPSHOT'
+        }
+    }
+}
+
+plugins {
+    id 'java-library'
+}
+
+apply(plugin: 'idea')
+apply(plugin: 'shamrock-services')
+
+shamrock {
+    service {
+        group = 'com.haulmont.shamrock'
+        version = '1.0'
+        name = rootProject.name
+        snapshot = true
+
+        ports {
+            app = 8150
+            debug = 8850
+            jmx = 58150
+        }
+    }
+    java {
+        xmx = '256m'
+    }
+    jetty {
+        version = '9.4.45.v20220203'
+        modules {
+            module_deploy {
+
+            }
+            module_ext {
+
+            }
+            module_http {
+
+            }
+            module_logging {
+
+            }
+            module_jndi {
+
+            }
+            module_plus {
+
+            }
+            module_annotations {
+
+            }
+        }
+    }
+    kubernetes {
+        docker {
+            baseImage = 'shamrock-microservices-base-image:temurin11'
+        }
+    }
+}
+
+def core_module = project(":${rootProject.name}-core")
+def rs_module = project(":${rootProject.name}-rs")
+
+def monaco_version = '3.4-SNAPSHOT'
+
+configure([core_module, rs_module]) {
+    apply(plugin: 'java')
+    apply(plugin: 'idea')
+    apply(plugin: 'maven')
+    apply(plugin: 'shamrock-services')
+
+    task sourceJar(type: Jar) {
+        from file('src')
+        classifier = 'sources'
+    }
+
+    dependencies {
+        testCompile(group: 'com.haulmont.monaco', name: 'monaco-test', version: "$monaco_version")
+    }
+
+    test {
+        useTestNG()
+        scanForTestClasses = false
+        includes = ['**/*Test.class']
+    }
+
+    artifacts {
+        archives sourceJar
+    }
+}
+
+configure(core_module) {
+    dependencies {
+        sharedLibs(group: 'com.haulmont.monaco', name: 'monaco-jetty', version: "$monaco_version") {
+            transitive = false
+        }
+
+        compile(group: 'com.haulmont.monaco', name: 'monaco-core', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-config', version: "$monaco_version")
+
+        compile(group: 'com.haulmont.monaco', name: 'monaco-graylog-reporter', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-sentry-reporter', version: "$monaco_version")
+
+        compile(group: 'com.haulmont.monaco', name: 'monaco-ds', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-ds-postgresql', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-ds-sybase', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-mybatis', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-redis', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-scheduler', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-sql2o', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-unirest', version: "$monaco_version")
+    }
+
+    task deploy(dependsOn: assemble, type: ShamrockDeployJettyTask) {
+        excludeConfigDirs = ['database-scripts', 'jetty-conf']
+        appJars(core_module.name)
+    }
+
+}
+
+configure(rs_module) {
+    dependencies {
+        compile(core_module)
+
+        compile(group: 'com.haulmont.monaco', name: 'monaco-metrics-influxdb', version: "$monaco_version")
+
+        compile(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
+        extraLibs(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version") {
+            transitive = false
+        }
+    }
+
+    jar {
+        manifest {
+        }
+    }
+
+    task deploy(dependsOn: assemble, type: ShamrockDeployJettyTask) {
+        excludeConfigDirs = ['database-scripts', 'jetty-conf']
+        appJars(core_module.name, rs_module.name)
+    }
+
+    start.dependsOn deploy
+    task restart(dependsOn: [':start'])
+}

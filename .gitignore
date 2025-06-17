@@ -1,0 +1,15 @@
+.idea
+*.iml
+*.ipr
+*.iws
+
+.gradle
+gradle
+gradlew
+gradlew.bat
+
+jetty_base
+jetty_home
+
+modules/core/build/
+modules/rs/build/

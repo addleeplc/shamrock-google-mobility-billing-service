@@ -1,0 +1,19 @@
+<!--
+  ~ Copyright (c) 2025 Haulmont. All rights reserved.
+  ~ Use is subject to license terms, see http://www.cuba-platform.com/license for details.
+  -->
+
+<configuration debug="false" scan="true" scanPeriod="30 seconds">
+    <property name="appCoreLog.maxSize" value="100MB"/>
+    <property name="appCoreLog.maxHistory" value="1"/>
+
+    <property name="appLog.maxSize" value="100MB"/>
+    <property name="appLog.maxHistory" value="1"/>
+
+    <property name="monaco-rs.level.MaskingLoggerInterceptor" value="DEBUG"/>
+
+    <logger name="com.haulmont.shamrock.google.mobility.billing" level="debug">
+        <appender-ref ref="MONACO_APP"/>
+    </logger>
+
+</configuration>
