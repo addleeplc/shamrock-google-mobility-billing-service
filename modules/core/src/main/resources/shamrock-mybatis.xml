@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+  ~ Haulmont Technology proprietary and confidential.
+  ~ Use is subject to license terms.
+  -->
+
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <settings>
+        <setting name="cacheEnabled" value="true"/>
+        <setting name="lazyLoadingEnabled" value="false"/>
+        <setting name="multipleResultSetsEnabled" value="true"/>
+    </settings>
+
+    <typeAliases>
+        <typeAlias type="org.joda.time.LocalDateTime" alias="LocalDateTime"/>
+
+        <typeAlias type="com.haulmont.shamrock.google.mobility.billing.model.Booking" alias="Booking"/>
+        <typeAlias type="com.haulmont.shamrock.google.mobility.billing.model.BillingTransaction" alias="BillingTransaction"/>
+    </typeAliases>
+
+    <typeHandlers>
+        <typeHandler javaType="java.util.UUID"
+                     handler="com.haulmont.monaco.mybatis.type.UUIDTypeHandler"/>
+        <typeHandler javaType="org.joda.time.LocalDateTime"
+                     handler="com.haulmont.monaco.mybatis.type.LocalDateTimeTypeHandler"/>
+        <typeHandler javaType="org.joda.time.LocalDate"
+                     handler="com.haulmont.monaco.mybatis.type.LocalDateTypeHandler"/>
+    </typeHandlers>
+
+    <environments default="SHAMROCK">
+        <environment id="SHAMROCK">
+            <transactionManager type="JDBC"/>
+            <dataSource type="com.haulmont.monaco.mybatis.DataSourceFactory">
+                <property name="ds-name" value="shamrock-ds"/>
+            </dataSource>
+        </environment>
+        <environment id="GOOGLE_MOBILITY_BILLING">
+            <transactionManager type="JDBC"/>
+            <dataSource type="com.haulmont.monaco.mybatis.DataSourceFactory">
+                <property name="ds-name" value="shamrock-google-mobility-billing-ds"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="com/haulmont/shamrock/google/mobility/billing/mybatis/mappers/BookingMapper.xml"/>
+        <mapper resource="com/haulmont/shamrock/google/mobility/billing/mybatis/mappers/BillingTransactionMapper.xml"/>
+    </mappers>
+
+</configuration>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+  ~ Haulmont Technology proprietary and confidential.
+  ~ Use is subject to license terms.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.haulmont.shamrock.google.mobility.billing.mybatis.mappers">
+
+    <resultMap id="billingTransactionResultMap" type="BillingTransaction">
+        <id property="bookingId" column="booking_id" javaType="java.util.UUID"/>
+
+        <result property="bookingDate" column="booking_date" javaType="LocalDateTime"/>
+        <result property="bookingCompletedDate" column="booking_completed_date" javaType="LocalDateTime"/>
+
+        <result property="responseCode" column="response_code" javaType="int"/>
+        <result property="responseMessage" column="response_message" javaType="String"/>
+
+        <result property="retries" column="retries" javaType="int"/>
+        <result property="processedTs" column="processed_ts" javaType="LocalDateTime"/>
+
+        <result property="createTs" column="create_ts" javaType="LocalDateTime"/>
+    </resultMap>
+
+    <select id="loadFailed" resultMap="billingTransactionResultMap">
+        SELECT
+            booking_id,
+            booking_date,
+            booking_completed_date,
+            processed_ts,
+            create_ts,
+
+            response_code,
+            response_message,
+            retries
+        FROM billing_transaction
+        WHERE   retries &lt;= #{retriesThreshold}
+                AND response_code IS NOT NULL
+                AND response_message IS NOT NULL
+        ORDER BY processed_ts DESC
+    </select>
+
+    <select id="isAlreadyProcessed" resultType="boolean">
+        SELECT EXISTS (
+            SELECT *
+            FROM billing_transaction
+            WHERE booking_id = #{booking_id}::UUID
+        )
+    </select>
+
+    <insert id="upsert" parameterType="BillingTransaction">
+        INSERT INTO billing_transaction (
+            booking_id,
+            booking_date,
+            booking_completed_date,
+            response_code,
+            response_message,
+            retries,
+            processed_ts,
+            create_ts
+        ) VALUES (
+                     #{transaction.bookingId, jdbcType=OTHER}::UUID,
+                     #{transaction.bookingDate, jdbcType=TIMESTAMP},
+                     #{transaction.bookingCompletedDate, jdbcType=TIMESTAMP},
+                     #{transaction.responseCode, jdbcType=SMALLINT},
+                     #{transaction.responseMessage, jdbcType=VARCHAR},
+                     #{transaction.retries, jdbcType=SMALLINT},
+                     #{transaction.processedTs, jdbcType=TIMESTAMP},
+                     #{transaction.createTs, jdbcType=TIMESTAMP}
+                 )
+        ON CONFLICT (booking_id) DO UPDATE SET
+                                               response_code = EXCLUDED.response_code,
+                                               response_message = EXCLUDED.response_message,
+                                               retries = EXCLUDED.retries,
+                                               processed_ts = EXCLUDED.processed_ts
+    </insert>
+
+</mapper>

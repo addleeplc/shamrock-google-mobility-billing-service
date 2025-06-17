@@ -10,3 +10,5 @@ jetty_home
 
 modules/core/build/
 modules/rs/build/
+
+deploy

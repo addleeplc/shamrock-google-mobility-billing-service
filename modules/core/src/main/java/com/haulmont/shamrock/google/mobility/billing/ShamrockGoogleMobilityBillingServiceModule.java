@@ -1,3 +1,9 @@
+/*
+ * Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+ * Haulmont Technology proprietary and confidential.
+ * Use is subject to license terms.
+ */
+
 package com.haulmont.shamrock.google.mobility.billing;
 
 import com.haulmont.monaco.annotations.Module;
@@ -11,7 +17,14 @@ import com.haulmont.monaco.container.ModuleLoader;
                 "monaco-config",
                 "monaco-graylog-reporter",
                 "monaco-sentry-reporter",
-                "monaco-ds", "monaco-ds-postgresql", "monaco-ds-sybase", "monaco-mybatis", "monaco-redis", "monaco-scheduler", "monaco-sql2o", "monaco-unirest"
+                "monaco-ds",
+                "monaco-ds-postgresql",
+                "monaco-ds-sybase",
+                "monaco-mybatis",
+                "monaco-redis",
+                "monaco-scheduler",
+                "monaco-sql2o",
+                "monaco-unirest"
         }
 )
 public class ShamrockGoogleMobilityBillingServiceModule extends ModuleLoader {

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ Copyright 2008 - 2025 Haulmont Technology Ltd. All Rights Reserved.
+  ~ Haulmont Technology proprietary and confidential.
+  ~ Use is subject to license terms.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="com.haulmont.shamrock.google.mobility.billing.mybatis.mappers">
+
+    <resultMap id="JC_Job" type="Booking">
+        <id property="id" column="JOB_ID"/>
+        <result property="uuid" column="JOB_UUID"/>
+
+        <result property="number" column="JOB_NUMBER"/>
+
+        <result property="jobDate" column="JOB_DATE"/>
+
+        <result property="completedDate" column="JOB_COMPLETED_DATE"/>
+    </resultMap>
+
+    <sql id="filterBooking">
+        ((COMPLETED = 1 AND STATUS = 5)
+        <if test="coaEnabled">
+            OR (CANCELLED = 1 AND CANCELLED_ON_ARRIVED = 1 AND STATUS = 7)
+        </if>
+        )
+        AND COMPLETED_DATE > #{from}
+        AND JOB_DATE &lt; #{to}
+        <if test="allowedCustomerCodes.size() > 0">
+            <foreach item="number" index="index" collection="allowedCustomerCodes"  open="AND c.NUMBER IN (" separator="," close=")">
+                #{number}
+            </foreach>
+        </if>
+        <include refid="filterInterval"/>
+    </sql>
+
+    <sql id="filterInterval">
+        <choose>
+            <when test="includeInterval.size() > 0">
+                <foreach item="range" collection="includeInterval" separator=" OR " open="AND (" close=")">
+                    <include refid="rangeIncluded"/>
+                </foreach>
+            </when>
+            <otherwise>
+                <if test="excludeInterval.size() > 0">
+                    <foreach item="range" collection="excludeInterval" separator=" AND " open="AND (" close=")">
+                        <include refid="rangeExclude"/>
+                    </foreach>
+                </if>
+            </otherwise>
+        </choose>
+    </sql>
+
+    <sql id="rangeIncluded">
+        <choose>
+            <when test="range.from != null and range.to != null">
+                (JOB_DATE &gt;=#{range.from} AND JOB_DATE &lt;= #{range.to})
+            </when>
+            <when test="range.from != null">
+                (JOB_DATE &gt;=#{range.from})
+            </when>
+            <when test="range.to != null">
+                (JOB_DATE &lt;= #{range.to})
+            </when>
+        </choose>
+    </sql>
+
+    <sql id="rangeExclude">
+        <choose>
+            <when test="range.from != null and range.to != null">
+                (JOB_DATE &lt;= #{range.from} AND JOB_DATE &gt;= #{range.to})
+            </when>
+            <when test="range.from != null">
+                (JOB_DATE &lt;= #{range.from})
+            </when>
+            <when test="range.to != null">
+                (JOB_DATE &gt;=#{range.to})
+            </when>
+        </choose>
+    </sql>
+
+    <select id="loadJobs" parameterType="java.util.Map" resultMap="JC_Job">
+        SELECT  j.ID AS JOB_ID,
+                j.UUID AS JOB_UUID,
+                j.NUMBER AS JOB_NUMBER,
+                j.JOB_DATE AS JOB_DATE,
+                j.COMPLETED_DATE AS JOB_COMPLETED_DATE,
+                j.CANCELLED_ON_ARRIVED AS JOB_CANCELLED_ON_ARRIVED,
+
+                c.NUMBER as CUSTOMER_NUMBER
+        FROM SL_JOBS j
+        INNER JOIN SL_CUSTOMER_ACCOUNTS c ON
+            c.ID = j.CUSTOMER_ID
+        <where><include refid="filterBooking"/></where>
+        UNION ALL
+        SELECT  d.ID AS JOB_ID,
+                d.UUID AS JOB_UUID,
+                d.NUMBER AS JOB_NUMBER,
+                d.JOB_DATE AS JOB_DATE,
+                d.COMPLETED_DATE AS JOB_COMPLETED_DATE,
+                d.CANCELLED_ON_ARRIVED AS JOB_CANCELLED_ON_ARRIVED,
+
+                c.NUMBER as CUSTOMER_NUMBER
+        FROM SL_DOCKETS d
+        INNER JOIN SL_CUSTOMER_ACCOUNTS c ON
+            c.ID = d.CUSTOMER_ID
+        <where><include refid="filterBooking"/></where>
+    </select>
+
+</mapper>

@@ -88,6 +88,11 @@ configure([core_module, rs_module]) {
 
     dependencies {
         testImplementation(group: 'com.haulmont.monaco', name: 'monaco-test', version: "$monaco_version")
+        testImplementation(group: 'org.testng', name: 'testng', version: '7.8.0')
+        testImplementation(group: 'org.mockito', name: 'mockito-core', version: '5.5.0')
+        testImplementation(group: 'org.springframework', name: 'spring-test', version: '5.3.29')
+        testImplementation("org.testcontainers:testcontainers:1.21.1")
+        testImplementation("org.testcontainers:postgresql:1.21.1")
     }
 
     test {
@@ -123,6 +128,12 @@ configure(core_module) {
         implementation(group: 'com.haulmont.monaco', name: 'monaco-unirest', version: "$monaco_version")
     }
 
+    test {
+        useTestNG()
+        scanForTestClasses = false
+        includes = ['**/*Test.class']
+    }
+
     task deploy(dependsOn: assemble, type: ShamrockDeployJettyTask) {
         excludeConfigDirs = ['database-scripts', 'jetty-conf']
         appJars(core_module.name)
@@ -134,9 +145,9 @@ configure(rs_module) {
     dependencies {
         compile(core_module)
 
-        implementation(group: 'com.haulmont.monaco', name: 'monaco-metrics-influxdb', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-metrics-influxdb', version: "$monaco_version")
 
-        implementation(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
+        compile(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version")
         extraLibs(group: 'com.haulmont.monaco', name: 'monaco-rs', version: "$monaco_version") {
             transitive = false
         }
