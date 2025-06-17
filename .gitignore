@@ -4,9 +4,6 @@
 *.iws
 
 .gradle
-gradle
-gradlew
-gradlew.bat
 
 jetty_base
 jetty_home
