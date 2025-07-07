@@ -34,8 +34,6 @@ public class BookingStorage {
     private Logger log;
 
     public List<Booking> loadBookings(LocalDateTime from, LocalDateTime to) {
-        from = from.minus(serviceConfiguration.afterBookingDateDelay());
-        to = to.minus(serviceConfiguration.afterBookingDateDelay());
         List<Booking> res = new LoadBookingsCommand(sqlSessionFactory,
                 from,
                 to,
@@ -43,6 +41,7 @@ public class BookingStorage {
                 configurationService.getAllowedAccountNumbers(),
                 configurationService.getIncludeDates(),
                 configurationService.getExcludeDates()).execute();
+
         log.info("Loaded {} bookings from: {} to: {}", res.size(), from, to);
         return res;
     }

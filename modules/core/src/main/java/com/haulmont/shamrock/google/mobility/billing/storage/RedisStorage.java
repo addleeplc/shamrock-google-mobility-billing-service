@@ -32,7 +32,7 @@ public class RedisStorage {
     private final RedisCacheKeyCodec<String> lastProcessedCompleteDateKeyCodec = new PropertyObjectCodec<>(SUBMIT_TRANSACTIONS_PROCESSED_TS, String.class, null);
 
     public LocalDateTime getLastProcessedCompleteDate() {
-        return Optional.ofNullable(getRedis().get(lastProcessedCompleteDateKeyCodec.encode(null)))
+        return Optional.ofNullable(getRedis().get(lastProcessedCompleteDateKeyCodec.encode("processedTs")))
                 .map(LocalDateTime::parse)
                 .orElseGet(() -> {
                     LocalDateTime now = LocalDateTime.now();
