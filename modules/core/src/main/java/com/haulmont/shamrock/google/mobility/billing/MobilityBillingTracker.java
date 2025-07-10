@@ -85,7 +85,7 @@ public class MobilityBillingTracker {
             }
         }, failedTransactions);
 
-        List<Booking> bookings = bookingStorage.loadBookings(lastProcessedCompleteDate, now.minus(serviceConfiguration.afterBookingDateDelay()));
+        List<Booking> bookings = bookingStorage.loadBookings(lastProcessedCompleteDate.minus(serviceConfiguration.afterBookingDateDelay()), now.minus(serviceConfiguration.afterBookingDateDelay()));
 
         batched(booking -> {
             try {
